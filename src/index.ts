@@ -1,8 +1,8 @@
-import { createHash } from "crypto";
-import path from "path";
+import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import favicons, { type FaviconImage, type FaviconResponse } from "favicons";
 import type { FaviconOptions } from "favicons";
-import { readFile } from "fs/promises";
 import mime from "mime-types";
 import type { Plugin } from "vite";
 
