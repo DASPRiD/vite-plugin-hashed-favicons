@@ -1,73 +1,124 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import path from "node:path";
-import favicons, { type FaviconImage, type FaviconResponse } from "favicons";
-import type { FaviconOptions } from "favicons";
-import mime from "mime-types";
+import sharp from "sharp";
+import toIco from "to-ico";
 import type { Plugin } from "vite";
 
-type Rewrite = [string, string];
+type Variant = {
+    data: Buffer;
+    filePath: string;
+    mimeType: string;
+};
+
+type Variants = {
+    svg: Variant;
+    ico: Variant;
+    png512: Variant;
+    png192: Variant;
+    pngMasked: Variant;
+    appleTouch: Variant;
+};
 
 type PluginContext = {
     command: "build" | "serve";
-    sourceHash: string;
-    response: FaviconResponse;
-    rewriteMap: Rewrite[];
+    variants: Variants;
+    webManifest: string;
 };
 
-const rewriteImageName = (image: FaviconImage, sourceHash: string): string => {
-    const extname = path.extname(image.name);
-    const basename = path.basename(image.name, extname);
-    return `assets/${basename}-${sourceHash}${extname}`;
+const createVariants = async (source: Buffer): Promise<Variants> => {
+    const sourceHash = createHash("md5").update(source).digest("base64url");
+    const image = sharp(source);
+
+    return {
+        svg: {
+            data: source,
+            filePath: `/assets/favicon-${sourceHash}.svg`,
+            mimeType: "image/svg+xml",
+        },
+        ico: {
+            data: await toIco(await image.clone().resize(32, 32).toFormat("png").toBuffer()),
+            filePath: "/favicon.ico",
+            mimeType: "image/x-icon",
+        },
+        png512: {
+            data: await image.clone().resize(512, 512).toFormat("png").toBuffer(),
+            filePath: `/assets/favicon-512-${sourceHash}.png`,
+            mimeType: "image/png",
+        },
+        png192: {
+            data: await image.clone().resize(192, 192).toFormat("png").toBuffer(),
+            filePath: `/assets/favicon-192-${sourceHash}.png`,
+            mimeType: "image/png",
+        },
+        pngMasked: {
+            data: await image
+                .clone()
+                .resize(408, 408)
+                .extend({
+                    top: 52,
+                    bottom: 52,
+                    left: 52,
+                    right: 52,
+                    background: { r: 0, g: 0, b: 0, alpha: 0 },
+                })
+                .toFormat("png")
+                .toBuffer(),
+            filePath: `/assets/favicon-192-${sourceHash}.png`,
+            mimeType: "image/png",
+        },
+        appleTouch: {
+            data: await image
+                .clone()
+                .resize(140, 140)
+                .extend({
+                    top: 20,
+                    bottom: 20,
+                    left: 20,
+                    right: 20,
+                    background: { r: 0, g: 0, b: 0, alpha: 0 },
+                })
+                .toFormat("png")
+                .toBuffer(),
+            filePath: `/assets/favicon-192-${sourceHash}.png`,
+            mimeType: "image/png",
+        },
+    };
 };
 
-const rewritePaths = (contents: string, rewriteMap: Rewrite[]): string => {
-    let result = contents;
+const createWebManifest = (
+    base: Record<string, unknown>,
+    variants: Variants,
+): Record<string, unknown> => ({
+    ...base,
+    icons: [
+        { src: variants.png192.filePath, sizes: "192x192" },
+        { src: variants.pngMasked.filePath, sizes: "512x512", purpose: "maskable" },
+        { src: variants.png512.filePath, sizes: "512x512" },
+    ],
+});
 
-    for (const rewrite of rewriteMap) {
-        result = result.replace(rewrite[0], rewrite[1]);
-    }
-
-    return result;
+export type HashedFaviconsOptions = {
+    webManifest?: Record<string, unknown>;
 };
 
-const transformIndexHtmlHook = (pluginContext: PluginContext, html: string): string => {
-    const { html: tags } = pluginContext.response;
-
-    const rewrittenTags = tags.map((element) => {
-        const rewrite = pluginContext.rewriteMap.find((rewrite) => element.includes(rewrite[0]));
-
-        if (!rewrite) {
-            return element;
-        }
-
-        return element.replace(rewrite[0], rewrite[1]);
-    });
-
-    return html.replace(/<\/head>/, `${rewrittenTags.join("\n  ")}\n$&`);
-};
-
-const hashedFaviconsPlugin = (
-    sourcePath: string,
-    options: Omit<FaviconOptions, "path">,
-): Plugin => {
+const hashedFaviconsPlugin = (sourcePath: string, options?: HashedFaviconsOptions): Plugin => {
     let pluginContext: PluginContext | undefined;
 
     return {
         name: "hashed-favicons",
         async configResolved(config) {
             const source = await readFile(sourcePath);
-            const sourceHash = createHash("md5").update(source).digest("base64url");
-            const response = await favicons(source, { ...options, path: "/" });
-            const rewriteMap = response.images.map((image): Rewrite => {
-                return [`/${image.name}`, `/${rewriteImageName(image, sourceHash)}`];
-            });
+            const variants = await createVariants(source);
+            const webManifest = JSON.stringify(
+                createWebManifest(options?.webManifest ?? {}, variants),
+                undefined,
+                4,
+            );
 
             pluginContext = {
                 command: config.command,
-                sourceHash,
-                response,
-                rewriteMap,
+                variants,
+                webManifest,
             };
         },
         configureServer(server) {
@@ -75,33 +126,22 @@ const hashedFaviconsPlugin = (
                 throw new Error("Plugin context has not been defined");
             }
 
-            const rewriteMap = pluginContext.rewriteMap;
+            const { webManifest } = pluginContext;
 
-            for (const file of pluginContext.response.files) {
-                server.middlewares.use(`/${file.name}`, (_req, res) => {
-                    res.setHeader(
-                        "Content-Type",
-                        mime.lookup(file.name) || "application/octet-stream",
-                    );
+            server.middlewares.use("/manifest.webmanifest", (_req, res) => {
+                res.setHeader("Content-Type", "application/manifest+json");
+                res.writeHead(200);
+                res.write(webManifest);
+                res.end();
+            });
+
+            for (const variant of Object.values(pluginContext.variants)) {
+                server.middlewares.use(variant.filePath, (_req, res) => {
+                    res.setHeader("Content-Type", variant.mimeType);
                     res.writeHead(200);
-                    res.write(rewritePaths(file.contents, rewriteMap));
+                    res.write(variant.data);
                     res.end();
                 });
-            }
-
-            for (const image of pluginContext.response.images) {
-                server.middlewares.use(
-                    `/${rewriteImageName(image, pluginContext.sourceHash)}`,
-                    (_req, res, next) => {
-                        res.setHeader(
-                            "Content-Type",
-                            mime.lookup(image.name) || "application/octet-stream",
-                        );
-                        res.writeHead(200);
-                        res.write(image.contents);
-                        res.end();
-                    },
-                );
             }
         },
         transformIndexHtml(html) {
@@ -109,7 +149,14 @@ const hashedFaviconsPlugin = (
                 throw new Error("Plugin context has not been defined");
             }
 
-            return transformIndexHtmlHook(pluginContext, html);
+            const tags = [
+                `<link rel="manifest" href="/manifest.webmanifest">`,
+                `<link rel="icon" href="${pluginContext.variants.ico.filePath}" sizes="32x32">`,
+                `<link rel="icon" type="image/svg+xml" href="${pluginContext.variants.svg.filePath}">`,
+                `<link rel="apple-touch-icon" href="${pluginContext.variants.appleTouch.filePath}">`,
+            ];
+
+            return html.replace(/<\/head>/, `${tags.join("\n  ")}\n$&`);
         },
         async generateBundle() {
             if (!pluginContext) {
@@ -120,22 +167,19 @@ const hashedFaviconsPlugin = (
                 return;
             }
 
-            for (const file of pluginContext.response.files) {
+            for (const variant of Object.values(pluginContext.variants)) {
                 this.emitFile({
                     type: "asset",
-                    fileName: file.name,
-                    source: rewritePaths(file.contents, pluginContext.rewriteMap),
+                    fileName: variant.filePath,
+                    source: variant.data,
                 });
             }
 
-            for (const image of pluginContext.response.images) {
-                this.emitFile({
-                    type: "asset",
-
-                    fileName: rewriteImageName(image, pluginContext.sourceHash),
-                    source: image.contents,
-                });
-            }
+            this.emitFile({
+                type: "asset",
+                fileName: "/manifest.webmanifest",
+                source: pluginContext.webManifest,
+            });
         },
     };
 };
