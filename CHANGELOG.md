@@ -1,3 +1,16 @@
+# [2.0.0](https://github.com/dasprid/vite-plugin-hashed-favicons/compare/v1.2.1...v2.0.0) (2025-04-05)
+
+
+### Features
+
+* replace `favicons` with own implementation ([c35a254](https://github.com/dasprid/vite-plugin-hashed-favicons/commit/c35a254c06a7380095bc2e9908432b7a8cc3f18c))
+
+
+### BREAKING CHANGES
+
+* this will generate a lot less icons, and require the input to
+be an SVG file.
+
 ## [1.2.1](https://github.com/dasprid/vite-plugin-hashed-favicons/compare/v1.2.0...v1.2.1) (2025-01-16)
 
 
