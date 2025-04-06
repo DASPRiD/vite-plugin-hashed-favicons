@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import sharp from "sharp";
-import toIco from "to-ico";
 import type { Plugin } from "vite";
+import { generateIco } from "./ico.js";
 
 type Variant = {
     data: Buffer;
@@ -36,7 +36,7 @@ const createVariants = async (source: Buffer): Promise<Variants> => {
             mimeType: "image/svg+xml",
         },
         ico: {
-            data: await toIco(await image.clone().resize(32, 32).toFormat("png").toBuffer()),
+            data: await generateIco([image.clone().resize(32, 32)]),
             filePath: "/favicon.ico",
             mimeType: "image/x-icon",
         },

@@ -4,7 +4,7 @@
         "enabled": true
     },
     "files": {
-        "include": ["biome.json", "commitlint.config.cjs", "src/**/*"]
+        "include": ["biome.json", "commitlint.config.cjs", "src/**/*", "test/**/*"]
     },
     "linter": {
         "enabled": true,

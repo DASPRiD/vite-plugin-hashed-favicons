@@ -28,6 +28,9 @@ jobs:
       - name: Biome CI
         run: pnpm biome ci .
 
+      - name: Test
+        run: pnpm test
+
       - name: Build
         run: pnpm build
 
