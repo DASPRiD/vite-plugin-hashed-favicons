@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/dasprid/vite-plugin-hashed-favicons/compare/v2.0.0...v2.0.1) (2025-04-06)
+
+
+### Bug Fixes
+
+* replace to-ico with own implementation due to deprecated subdependencies ([b803299](https://github.com/dasprid/vite-plugin-hashed-favicons/commit/b8032997d962928c9b7ee933aab97d82e1a3f5a0))
+
 # [2.0.0](https://github.com/dasprid/vite-plugin-hashed-favicons/compare/v1.2.1...v2.0.0) (2025-04-05)
 
 
