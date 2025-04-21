@@ -1,3 +1,10 @@
+## [2.0.2](https://github.com/dasprid/vite-plugin-hashed-favicons/compare/v2.0.1...v2.0.2) (2025-04-21)
+
+
+### Bug Fixes
+
+* remove leading slash from file names ([fd47802](https://github.com/dasprid/vite-plugin-hashed-favicons/commit/fd478020171bbd3ffc1039bb6bf7a694dd03eb58))
+
 ## [2.0.1](https://github.com/dasprid/vite-plugin-hashed-favicons/compare/v2.0.0...v2.0.1) (2025-04-06)
 
 
