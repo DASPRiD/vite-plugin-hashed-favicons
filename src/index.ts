@@ -32,22 +32,22 @@ const createVariants = async (source: Buffer): Promise<Variants> => {
     return {
         svg: {
             data: source,
-            filePath: `/assets/favicon-${sourceHash}.svg`,
+            filePath: `assets/favicon-${sourceHash}.svg`,
             mimeType: "image/svg+xml",
         },
         ico: {
             data: await generateIco([image.clone().resize(32, 32)]),
-            filePath: "/favicon.ico",
+            filePath: "favicon.ico",
             mimeType: "image/x-icon",
         },
         png512: {
             data: await image.clone().resize(512, 512).toFormat("png").toBuffer(),
-            filePath: `/assets/favicon-512-${sourceHash}.png`,
+            filePath: `assets/favicon-512-${sourceHash}.png`,
             mimeType: "image/png",
         },
         png192: {
             data: await image.clone().resize(192, 192).toFormat("png").toBuffer(),
-            filePath: `/assets/favicon-192-${sourceHash}.png`,
+            filePath: `assets/favicon-192-${sourceHash}.png`,
             mimeType: "image/png",
         },
         pngMasked: {
@@ -63,7 +63,7 @@ const createVariants = async (source: Buffer): Promise<Variants> => {
                 })
                 .toFormat("png")
                 .toBuffer(),
-            filePath: `/assets/favicon-192-${sourceHash}.png`,
+            filePath: `assets/favicon-192-${sourceHash}.png`,
             mimeType: "image/png",
         },
         appleTouch: {
@@ -79,7 +79,7 @@ const createVariants = async (source: Buffer): Promise<Variants> => {
                 })
                 .toFormat("png")
                 .toBuffer(),
-            filePath: `/assets/favicon-192-${sourceHash}.png`,
+            filePath: `assets/favicon-192-${sourceHash}.png`,
             mimeType: "image/png",
         },
     };
@@ -136,7 +136,7 @@ const hashedFaviconsPlugin = (sourcePath: string, options?: HashedFaviconsOption
             });
 
             for (const variant of Object.values(pluginContext.variants)) {
-                server.middlewares.use(variant.filePath, (_req, res) => {
+                server.middlewares.use(`/${variant.filePath}`, (_req, res) => {
                     res.setHeader("Content-Type", variant.mimeType);
                     res.writeHead(200);
                     res.write(variant.data);
@@ -177,7 +177,7 @@ const hashedFaviconsPlugin = (sourcePath: string, options?: HashedFaviconsOption
 
             this.emitFile({
                 type: "asset",
-                fileName: "/manifest.webmanifest",
+                fileName: "manifest.webmanifest",
                 source: pluginContext.webManifest,
             });
         },
