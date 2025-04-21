@@ -1,3 +1,10 @@
+## [2.0.3](https://github.com/dasprid/vite-plugin-hashed-favicons/compare/v2.0.2...v2.0.3) (2025-04-21)
+
+
+### Bug Fixes
+
+* adjust file paths for masked and apple touch icons ([f9a5a0d](https://github.com/dasprid/vite-plugin-hashed-favicons/commit/f9a5a0d818e224fb002cef2b4f1fc392f5c8d73d))
+
 ## [2.0.2](https://github.com/dasprid/vite-plugin-hashed-favicons/compare/v2.0.1...v2.0.2) (2025-04-21)
 
 
