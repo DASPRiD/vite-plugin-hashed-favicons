@@ -63,7 +63,7 @@ const createVariants = async (source: Buffer): Promise<Variants> => {
                 })
                 .toFormat("png")
                 .toBuffer(),
-            filePath: `assets/favicon-192-${sourceHash}.png`,
+            filePath: `assets/favicon-masked-${sourceHash}.png`,
             mimeType: "image/png",
         },
         appleTouch: {
@@ -79,7 +79,7 @@ const createVariants = async (source: Buffer): Promise<Variants> => {
                 })
                 .toFormat("png")
                 .toBuffer(),
-            filePath: `assets/favicon-192-${sourceHash}.png`,
+            filePath: `assets/favicon-apple-touch-${sourceHash}.png`,
             mimeType: "image/png",
         },
     };
