@@ -1,3 +1,10 @@
+## [2.0.5](https://github.com/DASPRiD/vite-plugin-hashed-favicons/compare/v2.0.4...v2.0.5) (2025-10-23)
+
+
+### Bug Fixes
+
+* add provenance attestation ([ca70131](https://github.com/DASPRiD/vite-plugin-hashed-favicons/commit/ca701316b6fa3adca62852dd8267ab97f2c8abcc))
+
 ## [2.0.4](https://github.com/dasprid/vite-plugin-hashed-favicons/compare/v2.0.3...v2.0.4) (2025-08-31)
 
 
