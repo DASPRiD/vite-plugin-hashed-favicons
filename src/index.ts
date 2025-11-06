@@ -91,9 +91,9 @@ const createWebManifest = (
 ): Record<string, unknown> => ({
     ...base,
     icons: [
-        { src: variants.png192.filePath, sizes: "192x192" },
-        { src: variants.pngMasked.filePath, sizes: "512x512", purpose: "maskable" },
-        { src: variants.png512.filePath, sizes: "512x512" },
+        { src: `/${variants.png192.filePath}`, sizes: "192x192" },
+        { src: `${variants.pngMasked.filePath}`, sizes: "512x512", purpose: "maskable" },
+        { src: `${variants.png512.filePath}`, sizes: "512x512" },
     ],
 });
 
@@ -151,9 +151,9 @@ const hashedFaviconsPlugin = (sourcePath: string, options?: HashedFaviconsOption
 
             const tags = [
                 `<link rel="manifest" href="/manifest.webmanifest">`,
-                `<link rel="icon" href="${pluginContext.variants.ico.filePath}" sizes="32x32">`,
-                `<link rel="icon" type="image/svg+xml" href="${pluginContext.variants.svg.filePath}">`,
-                `<link rel="apple-touch-icon" href="${pluginContext.variants.appleTouch.filePath}">`,
+                `<link rel="icon" href="/${pluginContext.variants.ico.filePath}" sizes="32x32">`,
+                `<link rel="icon" type="image/svg+xml" href="/${pluginContext.variants.svg.filePath}">`,
+                `<link rel="apple-touch-icon" href="/${pluginContext.variants.appleTouch.filePath}">`,
             ];
 
             return html.replace(/<\/head>/, `${tags.join("\n  ")}\n$&`);
