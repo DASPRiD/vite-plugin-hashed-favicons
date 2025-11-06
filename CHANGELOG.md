@@ -1,3 +1,10 @@
+## [2.0.6](https://github.com/DASPRiD/vite-plugin-hashed-favicons/compare/v2.0.5...v2.0.6) (2025-11-06)
+
+
+### Bug Fixes
+
+* make file paths absolute ([57226e8](https://github.com/DASPRiD/vite-plugin-hashed-favicons/commit/57226e895dd1e65dc6b6289b6f87404b0567022c))
+
 ## [2.0.5](https://github.com/DASPRiD/vite-plugin-hashed-favicons/compare/v2.0.4...v2.0.5) (2025-10-23)
 
 
