@@ -1,3 +1,10 @@
+## [2.0.7](https://github.com/DASPRiD/vite-plugin-hashed-favicons/compare/v2.0.6...v2.0.7) (2026-03-18)
+
+
+### Bug Fixes
+
+* allow vite v8 as peer dependency ([e66dc9a](https://github.com/DASPRiD/vite-plugin-hashed-favicons/commit/e66dc9aaf88df87a9d730e2d80fa34457aefb447))
+
 ## [2.0.6](https://github.com/DASPRiD/vite-plugin-hashed-favicons/compare/v2.0.5...v2.0.6) (2025-11-06)
 
 
