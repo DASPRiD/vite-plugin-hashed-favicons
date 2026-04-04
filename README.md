@@ -68,7 +68,7 @@ Then, in your app:
 import favicons from "virtual:hashed-favicons";
 
 console.log(favicons);
-//=> [{ rel: "manifest", href: "/manifest.webmanifest" }, { rel: "icon", href: "/favicon.ico" }, …]
+//=> [{ rel: "icon", href: "/favicon.ico" }, …]
 ```
 
 #### TypeScript
