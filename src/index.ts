@@ -99,18 +99,27 @@ const createWebManifest = (
 
 export type HashedFaviconsOptions = {
     webManifest?: Record<string, unknown>;
+    /** @default true */
+    inject?: boolean;
 };
 
-const hashedFaviconsPlugin = (sourcePath: string, options?: HashedFaviconsOptions): Plugin => {
+const hashedFaviconsPlugin = (
+    sourcePath: string,
+    { webManifest: webManifestOptions = {}, inject = true }: HashedFaviconsOptions = {},
+): Plugin => {
+    const name = "hashed-favicons";
+    const virtualModuleId = `virtual:${name}`;
+    const resolvedVirtualModuleId = `\0${virtualModuleId}`;
+
     let pluginContext: PluginContext | undefined;
 
     return {
-        name: "hashed-favicons",
+        name,
         async configResolved(config) {
             const source = await readFile(sourcePath);
             const variants = await createVariants(source);
             const webManifest = JSON.stringify(
-                createWebManifest(options?.webManifest ?? {}, variants),
+                createWebManifest(webManifestOptions, variants),
                 undefined,
                 4,
             );
@@ -144,9 +153,46 @@ const hashedFaviconsPlugin = (sourcePath: string, options?: HashedFaviconsOption
                 });
             }
         },
+        resolveId: {
+            filter: { id: new RegExp(`^${virtualModuleId}$`) },
+            handler: () => resolvedVirtualModuleId,
+        },
+        load: {
+            filter: { id: new RegExp(`^${resolvedVirtualModuleId}$`) },
+            handler() {
+                if (!pluginContext) {
+                    throw new Error("Plugin context has not been defined");
+                }
+
+                return `export default [
+                    {
+                        rel: "manifest",
+                        href: "/manifest.webmanifest",
+                    },
+                    {
+                        rel: "icon",
+                        href: "/${pluginContext.variants.ico.filePath}",
+                        sizes: "32x32",
+                    },
+                    {
+                        rel: "icon",
+                        type: "image/svg+xml",
+                        href: "/${pluginContext.variants.svg.filePath}",
+                    },
+                    {
+                        rel: "apple-touch-icon",
+                        href: "/${pluginContext.variants.appleTouch.filePath}",
+                    },
+                ]`;
+            },
+        },
         transformIndexHtml(html) {
             if (!pluginContext) {
                 throw new Error("Plugin context has not been defined");
+            }
+
+            if (!inject) {
+                return html;
             }
 
             const tags = [
