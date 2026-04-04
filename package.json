@@ -24,12 +24,15 @@
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       }
+    },
+    "./virtual": {
+      "types": "./dist/virtual.d.ts"
     }
   },
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node -e \"fs.cpSync('src/virtual.d.ts', 'dist/virtual.d.ts')\"",
     "test": "tsx --test",
     "format": "biome format . --write",
     "check": "biome check . --write"

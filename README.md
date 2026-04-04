@@ -43,3 +43,42 @@ export default defineConfig({
     ],
 });
 ```
+
+### Virtual module
+
+The plugin also provides a virtual module `virtual:hashed-favicons`, which allows you to inject the favicons yourself.
+
+```typescript
+import favicons from "vite-plugin-hashed-favicons";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+    plugins: [
+        favicons("./src/assets/favicon.svg", {
+            webManifest: {/* Your own web manifest settings */},
+            inject: false,
+        }),
+    ],
+});
+```
+
+Then, in your app:
+
+```typescript
+import favicons from "virtual:hashed-favicons";
+
+console.log(favicons);
+//=> [{ rel: "manifest", href: "/manifest.webmanifest" }, { rel: "icon", href: "/favicon.ico" }, …]
+```
+
+#### TypeScript
+
+In order to get types for the virtual module, add this to your `tsconfig.json`:
+
+```json
+{
+    "compilerOptions": {
+        "types": ["vite-plugin-hashed-favicons/virtual"]
+    }
+}
+```
