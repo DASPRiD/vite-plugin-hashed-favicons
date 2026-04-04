@@ -99,9 +99,14 @@ const createWebManifest = (
 
 export type HashedFaviconsOptions = {
     webManifest?: Record<string, unknown>;
+    /** @default true */
+    inject?: boolean;
 };
 
-const hashedFaviconsPlugin = (sourcePath: string, options?: HashedFaviconsOptions): Plugin => {
+const hashedFaviconsPlugin = (
+    sourcePath: string,
+    { webManifest: webManifestOptions = {}, inject = true }: HashedFaviconsOptions = {},
+): Plugin => {
     let pluginContext: PluginContext | undefined;
 
     return {
@@ -110,7 +115,7 @@ const hashedFaviconsPlugin = (sourcePath: string, options?: HashedFaviconsOption
             const source = await readFile(sourcePath);
             const variants = await createVariants(source);
             const webManifest = JSON.stringify(
-                createWebManifest(options?.webManifest ?? {}, variants),
+                createWebManifest(webManifestOptions, variants),
                 undefined,
                 4,
             );
@@ -147,6 +152,10 @@ const hashedFaviconsPlugin = (sourcePath: string, options?: HashedFaviconsOption
         transformIndexHtml(html) {
             if (!pluginContext) {
                 throw new Error("Plugin context has not been defined");
+            }
+
+            if (!inject) {
+                return html;
             }
 
             const tags = [
