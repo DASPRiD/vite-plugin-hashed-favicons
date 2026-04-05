@@ -85,6 +85,20 @@ const createVariants = async (source: Buffer): Promise<Variants> => {
     };
 };
 
+export type Link = {
+    rel: string;
+    href: string;
+    sizes?: string;
+    type?: string;
+};
+
+export const createLinks = (variants: Variants): Link[] => [
+    { rel: "manifest", href: "/manifest.webmanifest" },
+    { rel: "icon", href: `/${variants.ico.filePath}`, sizes: "32x32" },
+    { rel: "icon", type: "image/svg+xml", href: `/${variants.svg.filePath}` },
+    { rel: "apple-touch-icon", href: `/${variants.appleTouch.filePath}` },
+];
+
 const createWebManifest = (
     base: Record<string, unknown>,
     variants: Variants,
@@ -92,8 +106,8 @@ const createWebManifest = (
     ...base,
     icons: [
         { src: `/${variants.png192.filePath}`, sizes: "192x192" },
-        { src: `${variants.pngMasked.filePath}`, sizes: "512x512", purpose: "maskable" },
-        { src: `${variants.png512.filePath}`, sizes: "512x512" },
+        { src: `/${variants.pngMasked.filePath}`, sizes: "512x512", purpose: "maskable" },
+        { src: `/${variants.png512.filePath}`, sizes: "512x512" },
     ],
 });
 
@@ -164,26 +178,8 @@ const hashedFaviconsPlugin = (
                     throw new Error("Plugin context has not been defined");
                 }
 
-                return `export default [
-                    {
-                        rel: "manifest",
-                        href: "/manifest.webmanifest",
-                    },
-                    {
-                        rel: "icon",
-                        href: "/${pluginContext.variants.ico.filePath}",
-                        sizes: "32x32",
-                    },
-                    {
-                        rel: "icon",
-                        type: "image/svg+xml",
-                        href: "/${pluginContext.variants.svg.filePath}",
-                    },
-                    {
-                        rel: "apple-touch-icon",
-                        href: "/${pluginContext.variants.appleTouch.filePath}",
-                    },
-                ]`;
+                const links = createLinks(pluginContext.variants);
+                return `export default ${JSON.stringify(links, undefined, 4)}`;
             },
         },
         transformIndexHtml(html) {
@@ -195,12 +191,12 @@ const hashedFaviconsPlugin = (
                 return html;
             }
 
-            const tags = [
-                `<link rel="manifest" href="/manifest.webmanifest">`,
-                `<link rel="icon" href="/${pluginContext.variants.ico.filePath}" sizes="32x32">`,
-                `<link rel="icon" type="image/svg+xml" href="/${pluginContext.variants.svg.filePath}">`,
-                `<link rel="apple-touch-icon" href="/${pluginContext.variants.appleTouch.filePath}">`,
-            ];
+            const tags = createLinks(pluginContext.variants).map((link) => {
+                const attrs = Object.entries(link)
+                    .map(([key, value]) => `${key}="${value}"`)
+                    .join(" ");
+                return `<link ${attrs}>`;
+            });
 
             return html.replace(/<\/head>/, `${tags.join("\n  ")}\n$&`);
         },
