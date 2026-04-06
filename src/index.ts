@@ -85,6 +85,20 @@ const createVariants = async (source: Buffer): Promise<Variants> => {
     };
 };
 
+export type Link = {
+    rel: string;
+    href: string;
+    sizes?: string;
+    type?: string;
+};
+
+export const createLinks = (variants: Variants): Link[] => [
+    { rel: "manifest", href: "/manifest.webmanifest" },
+    { rel: "icon", href: `/${variants.ico.filePath}`, sizes: "32x32" },
+    { rel: "icon", type: "image/svg+xml", href: `/${variants.svg.filePath}` },
+    { rel: "apple-touch-icon", href: `/${variants.appleTouch.filePath}` },
+];
+
 const createWebManifest = (
     base: Record<string, unknown>,
     variants: Variants,
@@ -92,25 +106,34 @@ const createWebManifest = (
     ...base,
     icons: [
         { src: `/${variants.png192.filePath}`, sizes: "192x192" },
-        { src: `${variants.pngMasked.filePath}`, sizes: "512x512", purpose: "maskable" },
-        { src: `${variants.png512.filePath}`, sizes: "512x512" },
+        { src: `/${variants.pngMasked.filePath}`, sizes: "512x512", purpose: "maskable" },
+        { src: `/${variants.png512.filePath}`, sizes: "512x512" },
     ],
 });
 
 export type HashedFaviconsOptions = {
     webManifest?: Record<string, unknown>;
+    /** @default true */
+    inject?: boolean;
 };
 
-const hashedFaviconsPlugin = (sourcePath: string, options?: HashedFaviconsOptions): Plugin => {
+const hashedFaviconsPlugin = (
+    sourcePath: string,
+    { webManifest: webManifestOptions = {}, inject = true }: HashedFaviconsOptions = {},
+): Plugin => {
+    const name = "hashed-favicons";
+    const virtualModuleId = `virtual:${name}`;
+    const resolvedVirtualModuleId = `\0${virtualModuleId}`;
+
     let pluginContext: PluginContext | undefined;
 
     return {
-        name: "hashed-favicons",
+        name,
         async configResolved(config) {
             const source = await readFile(sourcePath);
             const variants = await createVariants(source);
             const webManifest = JSON.stringify(
-                createWebManifest(options?.webManifest ?? {}, variants),
+                createWebManifest(webManifestOptions, variants),
                 undefined,
                 4,
             );
@@ -144,17 +167,36 @@ const hashedFaviconsPlugin = (sourcePath: string, options?: HashedFaviconsOption
                 });
             }
         },
+        resolveId: {
+            filter: { id: new RegExp(`^${virtualModuleId}$`) },
+            handler: () => resolvedVirtualModuleId,
+        },
+        load: {
+            filter: { id: new RegExp(`^${resolvedVirtualModuleId}$`) },
+            handler() {
+                if (!pluginContext) {
+                    throw new Error("Plugin context has not been defined");
+                }
+
+                const links = createLinks(pluginContext.variants);
+                return `export default ${JSON.stringify(links, undefined, 4)}`;
+            },
+        },
         transformIndexHtml(html) {
             if (!pluginContext) {
                 throw new Error("Plugin context has not been defined");
             }
 
-            const tags = [
-                `<link rel="manifest" href="/manifest.webmanifest">`,
-                `<link rel="icon" href="/${pluginContext.variants.ico.filePath}" sizes="32x32">`,
-                `<link rel="icon" type="image/svg+xml" href="/${pluginContext.variants.svg.filePath}">`,
-                `<link rel="apple-touch-icon" href="/${pluginContext.variants.appleTouch.filePath}">`,
-            ];
+            if (!inject) {
+                return html;
+            }
+
+            const tags = createLinks(pluginContext.variants).map((link) => {
+                const attrs = Object.entries(link)
+                    .map(([key, value]) => `${key}="${value}"`)
+                    .join(" ");
+                return `<link ${attrs}>`;
+            });
 
             return html.replace(/<\/head>/, `${tags.join("\n  ")}\n$&`);
         },
