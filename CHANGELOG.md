@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/DASPRiD/vite-plugin-hashed-favicons/compare/v2.0.7...v2.1.0) (2026-04-06)
+
+
+### Features
+
+* add `inject` option and virtual module ([#1](https://github.com/DASPRiD/vite-plugin-hashed-favicons/issues/1)) ([e12d02b](https://github.com/DASPRiD/vite-plugin-hashed-favicons/commit/e12d02b3ad121f6885bc3369c0cde890d4c7a493))
+
 ## [2.0.7](https://github.com/DASPRiD/vite-plugin-hashed-favicons/compare/v2.0.6...v2.0.7) (2026-03-18)
 
 
